@@ -1,5 +1,7 @@
 import streamlit as st
 from textblob import TextBlob
+from collections import Counter
+import re
 
 st.title("📰 InsightBrief AI")
 st.subheader("AI-Powered News Summarizer")
@@ -58,6 +60,31 @@ def detect_category(text):
         return "📌 General"
 
 
+# Keyword Extraction
+def extract_keywords(text):
+
+    words = re.findall(r'\b[a-zA-Z]+\b', text.lower())
+
+    stop_words = {
+        "the", "is", "in", "and", "to", "of", "a", "for",
+        "on", "with", "that", "as", "are", "it", "this",
+        "by", "an", "be", "from", "at", "or"
+    }
+
+    filtered_words = [
+        word for word in words
+        if word not in stop_words and len(word) > 3
+    ]
+
+    word_counts = Counter(filtered_words)
+
+    keywords = [
+        word for word, count in word_counts.most_common(5)
+    ]
+
+    return keywords
+
+
 if st.button("Generate Summary"):
 
     if news_text:
@@ -65,6 +92,7 @@ if st.button("Generate Summary"):
         summary = summarize_text(news_text)
         sentiment = get_sentiment(news_text)
         category = detect_category(news_text)
+        keywords = extract_keywords(news_text)
 
         st.subheader("📌 Summary")
         st.write(summary)
@@ -74,6 +102,9 @@ if st.button("Generate Summary"):
 
         st.subheader("📰 Category")
         st.write(category)
+
+        st.subheader("🔑 Keywords")
+        st.write(", ".join(keywords))
 
     else:
         st.warning("Please paste a news article.")
